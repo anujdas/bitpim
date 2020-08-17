@@ -59,6 +59,7 @@ class Phone(parentphone):
                 sf.readfrombuffer(buf, logtitle="SMS saved item")
                 entry=self._getoutboxmessage(sf.outbox)
                 entry.folder=entry.Folder_Saved
+                entry.datetime="%d%02d%02dT%02d%02d%02d" % (sf.GPStime)
                 res[entry.id]=entry
             except:
                 self.log('Failed to process SMS file: '+item.filename)

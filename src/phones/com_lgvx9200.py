@@ -46,7 +46,118 @@ class Phone(parentphone):
     #  - getringtoneindices  - LGUncountedIndexedMedia
     #  - DM Version          - 6
     #  - phonebook           - LG Phonebook v1 Extended
-    #  - SMS                 - same dir structure as the VX-8800
+    #  - SMS                 - same dir structure as the VX-8800, modified file structure
+
+    def _getoutboxmessage(self, sf):
+        entry=sms.SMSEntry()
+        entry.folder=entry.Folder_Sent
+        entry.datetime="%d%02d%02dT%02d%02d00" % sf.timesent[:5]
+        # add all the recipients
+        for r in sf.recipients:
+            if r.number:
+                confirmed=(r.status==5)
+                confirmed_date=None
+                if confirmed:
+                    confirmed_date="%d%02d%02dT%02d%02d00" % r.timereceived
+                entry.add_recipient(r.number, confirmed, confirmed_date, r.name)
+        entry.subject=sf.subject
+        txt=""
+        if sf.num_msg_elements==1 and not sf.messages[0].binary:
+            txt=self._get_text_from_sms_msg_without_header(sf.messages[0].msg, sf.messages[0].length)
+        else:
+            for i in range(sf.num_msg_elements):
+                txt+=self._get_text_from_sms_msg_with_header(sf.messages[i].msg, sf.messages[i].length)
+        entry.text=unicode(txt, errors='ignore')
+        if sf.priority==0:
+            entry.priority=sms.SMSEntry.Priority_Normal
+        else:
+            entry.priority=sms.SMSEntry.Priority_High
+        entry.locked=sf.locked
+        entry.callback=sf.callback
+        return entry
+
+    def _getinboxmessage(self, sf):
+        entry = sms.SMSEntry()
+        entry.folder = entry.Folder_Inbox
+        entry.datetime = "%d%02d%02dT%02d%02d%02d" % sf.GPStime
+        entry.read = bool(sf.read)
+        entry.locked = bool(sf.locked)
+        entry.priority = sms.SMSEntry.Priority_High if sf.priority else sms.SMSEntry.Priority_Normal
+        entry._from = sf.sender if sf.sender else sf.sender_name
+        entry.callback = sf.callback
+        entry.subject = self._decode_subject(sf.subject, sf.encoding).encode('utf-8')
+
+        msgs = sf.msgs[0:sf.num_msg_fragments]
+        has_udh = sf.has_udh == 2
+        entry.text = self._decode_msg(msgs, sf.encoding, has_udh).encode('utf-8')
+
+        return entry
+
+    # encodings:
+    # - 0x04 - UTF-16BE
+    # - 0x08 - ISO-8859-1
+    def _decode_subject(self, subject, encoding):
+        if encoding == 0x04:
+            return self._decode_ucs16(subject).rstrip('\x00')
+        else:
+            return self._decode_ascii(subject).rstrip('\x00')
+
+    # encodings:
+    # - 0x02 - 7-bit
+    # - 0x04 - UTF-16BE
+    # - 0x08 - ISO-8859-1
+    # - 0x09 - multipart-GSM-07?
+    def _decode_msg(self, msgs, encoding, has_udh):
+        fragments = ""
+        for m in msgs:
+            if encoding == 0x02:
+                fragments += self._decode_septets(m.msg_data.msg, m.msg_length)
+            elif encoding == 0x09:
+                fragments += self._decode_septets_with_udh(m.msg_data.msg, m.msg_length)
+            else:
+                msg_start = m.msg_data.msg[0].byte + 1 if has_udh else 0
+                msg = m.msg_data.msg[msg_start:m.msg_length]
+                if encoding == 0x04:
+                    fragments += self._decode_ucs16(msg)
+                elif encoding == 0x08:
+                    fragments += self._decode_ascii(msg)
+
+        return fragments #.encode('utf-8', errors='ignore')
+
+    def _udh_len(self, msg):
+        return msg[0].byte + 1  # byte 0 is the header length in bytes, not including itself
+
+    def _decode_septets(self, txt, num_septets):
+        out = bytearray(num_septets)
+        for i in range(num_septets):
+            tmp = (txt[(i * 7) / 8].byte << 8) | txt[((i * 7) / 8) + 1].byte
+            bit_index = 9 - ((i * 7) % 8)
+            out[i] = (tmp >> bit_index) & 0x7f
+        return out.decode('ascii')
+
+    def _decode_septets_with_udh(self, msg, num_septets):
+        # reverse every seven byte chunk before decoding septets
+        reordered = []
+        for i in range(0, (num_septets * 7) / 8 + 8, 7):
+            reordered += reversed(msg[i:i + 7])
+
+        # extract the 7-bit chars into bytes
+        septets = self._decode_septets(reordered, num_septets + 7).encode('ascii')
+
+        # correct the byte order and strip the UDH off the message
+        out = bytearray(num_septets - 7)
+        for i in range(0, num_septets + 7, 8):
+            for j in range(8):
+                if 0 <= i - j < num_septets - 7:
+                    out[i - j] = septets[i + j]
+
+        return out.decode('ascii')
+
+    def _decode_ascii(self, txt):
+        return bytearray(b.byte for b in txt).decode('ascii')
+
+    def _decode_ucs16(self, txt):
+        return bytearray(b.byte for b in txt).decode('utf-16be')
 
 #-------------------------------------------------------------------------------
 parentprofile=com_lgvx11000.Profile

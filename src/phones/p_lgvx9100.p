@@ -281,7 +281,7 @@ PACKET msg_record:
 
 PACKET recipient_record:
     P BOOL { 'default': False } +lastone
-    33 DATA unknown1 # contains recipient name from phonebook on this phone
+    33 USTRING name # contains recipient name from phonebook on this phone
     49 USTRING number
     1 UINT numberlen "length of the number"
     1 UINT status   # 1 when sent, 5 when received

@@ -3381,7 +3381,7 @@ class _gen_p_lgvx9100_280(BaseProtogenClass):
 
 
 class recipient_record(BaseProtogenClass):
-    __fields=['lastone', 'unknown1', 'number', 'numberlen', 'status', 'dunno1', 'timesent', 'timereceived', 'unknown2', 'unknown3']
+    __fields=['lastone', 'name', 'number', 'numberlen', 'status', 'dunno1', 'timesent', 'timereceived', 'unknown2', 'unknown3']
 
     def __init__(self, *args, **kwargs):
         dict={}
@@ -3417,7 +3417,7 @@ class recipient_record(BaseProtogenClass):
     def writetobuffer(self,buf,autolog=True,logtitle="<written data>"):
         'Writes this packet to the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
-        self.__field_unknown1.writetobuffer(buf)
+        self.__field_name.writetobuffer(buf)
         self.__field_number.writetobuffer(buf)
         self.__field_numberlen.writetobuffer(buf)
         self.__field_status.writetobuffer(buf)
@@ -3434,8 +3434,8 @@ class recipient_record(BaseProtogenClass):
         'Reads this packet from the supplied buffer'
         self._bufferstartoffset=buf.getcurrentoffset()
         if autolog and self._bufferstartoffset==0: self.autologread(buf, logtitle=logtitle)
-        self.__field_unknown1=DATA(**{'sizeinbytes': 33})
-        self.__field_unknown1.readfrombuffer(buf)
+        self.__field_name=USTRING(**{'sizeinbytes': 33})
+        self.__field_name.readfrombuffer(buf)
         self.__field_number=USTRING(**{'sizeinbytes': 49})
         self.__field_number.readfrombuffer(buf)
         self.__field_numberlen=UINT(**{'sizeinbytes': 1})
@@ -3471,18 +3471,18 @@ class recipient_record(BaseProtogenClass):
 
     lastone=property(__getfield_lastone, __setfield_lastone, __delfield_lastone, None)
 
-    def __getfield_unknown1(self):
-        return self.__field_unknown1.getvalue()
+    def __getfield_name(self):
+        return self.__field_name.getvalue()
 
-    def __setfield_unknown1(self, value):
-        if isinstance(value,DATA):
-            self.__field_unknown1=value
+    def __setfield_name(self, value):
+        if isinstance(value,USTRING):
+            self.__field_name=value
         else:
-            self.__field_unknown1=DATA(value,**{'sizeinbytes': 33})
+            self.__field_name=USTRING(value,**{'sizeinbytes': 33})
 
-    def __delfield_unknown1(self): del self.__field_unknown1
+    def __delfield_name(self): del self.__field_name
 
-    unknown1=property(__getfield_unknown1, __setfield_unknown1, __delfield_unknown1, None)
+    name=property(__getfield_name, __setfield_name, __delfield_name, None)
 
     def __getfield_number(self):
         return self.__field_number.getvalue()
@@ -3593,7 +3593,7 @@ class recipient_record(BaseProtogenClass):
 
     def containerelements(self):
         yield ('lastone', self.__field_lastone, None)
-        yield ('unknown1', self.__field_unknown1, None)
+        yield ('name', self.__field_name, None)
         yield ('number', self.__field_number, None)
         yield ('numberlen', self.__field_numberlen, "length of the number")
         yield ('status', self.__field_status, None)

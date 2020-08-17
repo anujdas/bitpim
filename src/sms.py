@@ -197,7 +197,8 @@ class SMSEntry(object):
         return s
     def _check_and_create_msg_id(self):
         if not len(self.msg_id) and len(self.text) and len(self.datetime):
-            self._data['msg_id']=sha.new(self.datetime+self.text).hexdigest()
+            cleantext = self.text.decode('utf-8').encode('ascii', errors='ignore')
+            self._data['msg_id']=sha.new(self.datetime+cleantext).hexdigest()
     def _get_callback(self):
         return self._data.get('callback', '')
     def _set_callback(self, v):
@@ -257,12 +258,14 @@ class SMSEntry(object):
     priority=property(fget=_get_priority, fset=_set_priority)
     priority_str=property(fget=_get_priority_str)
 
-    def add_recipient(self, name, confirmed=None, confirmed_datetime=None):
+    def add_recipient(self, name, confirmed=None, confirmed_datetime=None, contact_name=None):
         if isinstance(confirmed_datetime, (list, tuple)):
             if len(confirmed_datetime)!=5:
                 raise ValueError('must be (y,m,d,h,m)')
             confirmed_datetime='%04d%02d%02dT%02d%02d00'%confirmed_datetime
         r={'name': name }
+        if contact_name:
+            r['contact_name'] = contact_name
         if confirmed_datetime:
             r['confirmed_datetime']=confirmed_datetime
         self._data.setdefault('receivers', []).append(r)

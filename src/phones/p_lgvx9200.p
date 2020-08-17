@@ -115,4 +115,36 @@ PACKET pbgroups:
     * LIST {'elementclass': pbgroup,
             'length': MAX_PHONEBOOK_GROUPS,
             'createdefault': True} +groups
-            
+
+# sms/inbox/inbox****.dat format
+PACKET SMSINBOXMSGFRAGMENT:
+    * LIST { 'length': 222 } +msg:
+        1 UINT byte "individual byte of message"
+
+PACKET sms_in:
+    4  UINT    unk0      # zero
+    4  UINT    index
+    4  UINT    unk1      # always ends in 02 00?
+    4  GPSDATE GPStime   # num seconds since 0h 1-6-80, time message received by phone
+    6  SMSDATE timesent  # as BCD, year-month-day-hour-minute-second
+    2  UINT    unk2      # zero
+    4  GPSDATE gtimesent # num seconds since 0h 1-6-80, time message received by phone
+    1  UINT    read      # boolean, 0 = unread, 1 = read
+    1  UINT    locked    # boolean, 0 = unread, 1 = read
+    1  UINT    priority  # 0 = normal, 1 = high
+    5  UNKNOWN unk3
+    1  UINT    encoding  # 02 = 7-bit, 04 = UTF-16BE, 08 = ISO-8859-1, 09 = multipart-7-bit
+    7  UNKNOWN unk4
+    1  UINT    has_udh   # 0 = no, 2 = yes binary UDH header
+    1  UINT    num_msg_fragments # up to 20
+    *  LIST { 'length': 60 } +subject:
+        1 UINT byte "individual byte of subject"
+    4  UINT     unk5      # zero
+    *  LIST { 'length': 20 } +msgs:
+        1 UINT msg_id
+        1 UINT msg_length
+        * SMSINBOXMSGFRAGMENT msg_data
+    24 USTRING sender
+    33 USTRING sender_name
+    49 USTRING callback
+    4  UINT    unk6      # sender id?
