@@ -426,11 +426,6 @@ def getdatainfo(column, entry):
     return (key, None)
     
 class CategoryManager:
-
-    # this is only used to prevent the pubsub module
-    # from being GC while any instance of this class exists
-    __publisher=pubsub.Publisher
-
     def __init__(self):
         self.categories=[]
         self.group_wps=[]

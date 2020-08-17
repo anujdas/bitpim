@@ -40,9 +40,6 @@ class DisplayItem(fileview.FileViewDisplayItem):
 class RingerView(fileview.FileView):
     CURRENTFILEVERSION=2
 
-    # this is only used to prevent the pubsub module
-    # from being GC while any instance of this class exists
-    __publisher=pubsub.Publisher
     media_notification_type=pubsub.ringtone_type
     database_key='ringtone-index'
     media_key='ringtone'

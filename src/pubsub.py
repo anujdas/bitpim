@@ -21,7 +21,8 @@ weak references.  It does now, so a whole bunch of code could be
 deleted.
 """
 
-from wx.lib.pubsub import Publisher
+from wx.lib.pubsub import setuparg1
+from wx.lib.pubsub import pub
 
 
 ###
@@ -70,10 +71,10 @@ media_old_name='old_name'
 media_new_name='new_name'
 
 def subscribe(listener, topic):
-    Publisher.subscribe(listener, topic)
+    pub.subscribe(listener, topic)
 
 def unsubscribe(listener):
-    Publisher.unsubscribe(listener)
+    pub.unsubscribe(listener)
 
 def publish(topic, data=None):
-    Publisher.sendMessage(topic, data)
+    pub.sendMessage(topic, data)

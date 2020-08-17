@@ -53,10 +53,6 @@ class WallpaperView(fileview.FileView):
     media_key='wallpapers'
     default_origin="images"
 
-    # this is only used to prevent the pubsub module
-    # from being GC while any instance of this class exists
-    __publisher=pubsub.Publisher
-
     _bitmaptypemapping={
         # the extensions we use and corresponding wx types
         'bmp': wx.BITMAP_TYPE_BMP,
